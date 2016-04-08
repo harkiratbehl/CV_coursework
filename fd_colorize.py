@@ -1,15 +1,15 @@
 #!/usr/bin/python
 
 import cv2
-import os,sys,copy
+import os,sys,copy,pickle
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LinearRegression
 
 #--- Global declarations
-NumClusters = 3
+NumClusters = 20
 PatchSize = 27
-PatchStride = PatchSize*10
+PatchStride = PatchSize
 
 #########################################################################
 # Patch Extractor:
@@ -49,7 +49,7 @@ def PatchExtractor(image,psize,stride=None):
 #########################################################################
 # TrainKmeansAndRegression:
 #   Trains the K-means clutering model and uses
-#   the U-V values of the patche centers to train
+#   the U-V values of the patch centers to train
 #   regression models for each cluster center
 #########################################################################
 
@@ -135,7 +135,7 @@ def AssignColor(image,kmodel,u_reg_models,v_reg_models,psize): #Image should be 
                 sys.stdout.flush()
         print "Phase completed: ", i+1," out of ",len(kmodel.cluster_centers_)
     
-    return image
+    return np.uint8(image)
 
 if __name__ == "__main__":
     S = cv2.imread("img_color.jpg") # Source color image
@@ -146,9 +146,24 @@ if __name__ == "__main__":
     T = cv2.cvtColor(cv2.imread("img_gray.jpg",0),cv2.COLOR_GRAY2BGR) 
     T = cv2.cvtColor(T,cv2.COLOR_BGR2YUV)
 
-    patches,u_vals,v_vals = PatchExtractor(S,PatchSize,PatchStride)
+    patches_filename = "patches_psize-"+str(PatchSize)+",pstride-"+str(PatchStride)
+    try:
+        (patches,u_vals,v_vals) = pickle.load( open( patches_filename+".p", "rb" ) )
+        print "Successfully loaded pickle file:",patches_filename
+    except IOError:
+        print "Pickle file not found:",patches_filename,"\n Generating patches..."
+        patches,u_vals,v_vals = PatchExtractor(S,PatchSize,PatchStride)
+        pickle.dump( (patches,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
 
-    kmodel,u_reg_models,v_reg_models = TrainKmeansAndRegression(patches,u_vals,v_vals)
+    train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
+
+    try:
+        (kmodel,u_reg_models,v_reg_models) = pickle.load( open( train_filename+".p", "rb" ) )
+        print "Successfully loaded pickle file:",train_filename
+    except IOError:
+        print "Pickle file not found:",patches_filename,"\n Training models..."
+        kmodel,u_reg_models,v_reg_models = TrainKmeansAndRegression(patches,u_vals,v_vals)
+        pickle.dump( (kmodel,u_reg_models,v_reg_models), open( train_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
 
     output_yuv = AssignColor(T,kmodel,u_reg_models,v_reg_models,PatchSize)
 
