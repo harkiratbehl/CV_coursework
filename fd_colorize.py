@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 import cv2
-import os,copy
+import os,sys,copy
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LinearRegression
 
 PatchSize = 27
-PatchStride = PatchSize
+PatchStride = PatchSize*10
 
 def PatchExtractor(image,psize,stride=None):
 	assert(psize%2 == 1) # Patch size must be odd
@@ -35,6 +35,46 @@ def PatchExtractor(image,psize,stride=None):
 	utrain = utrain.reshape((-1,1))
 	vtrain = vtrain.reshape((-1,1))
 	return np.vstack(patches),utrain,vtrain
+
+def AssignColor(image,kmodel,u_reg_models,v_reg_models,psize): #Image should be YUV
+	p_by2 = psize//2
+	patches = []
+	patch_centers = []
+	for px in range( p_by2, image.shape[0]-p_by2 ):
+		for py in range( p_by2, image.shape[1]-p_by2 ):
+			patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
+			patches.append( patch.reshape((1,-1)) )
+			patch_centers.append( [px,py] )
+	
+	patches = np.vstack(patches)
+	# print patches.shape
+	mean_labels = kmodel.predict( patches )
+	# u_val = u_reg_models[mean_label].predict()
+
+	for i,pt in enumerate(kmodel.cluster_centers_):
+		indices = [mean_labels == i]
+		# print "Len of patch_centers:",len(patch_centers)
+		# print "Shape of indices:",indices.shape
+		# print indices
+		for ind in range(len(patch_centers)):
+			if indices[0][ind] is False:
+				# print 'False'
+				continue
+			# print "ind:",ind
+			# print "patch_centers:", patch_centers[ind]
+			# px,py = patch_centers[ind][0], patch_centers[ind][1]
+			# u_patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
+			# v_patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
+			u_val = u_reg_models[i].predict( patches[ind].reshape(1,-1) )
+			v_val = v_reg_models[i].predict( patches[ind].reshape(1,-1) )
+			
+			if ind%1000 == 0:
+				string = "\rProgress: %5.2f " % ( 100.0*ind/len(patch_centers) )
+				sys.stdout.write(string)
+				sys.stdout.flush()
+		print "Phase completed: ", i+1," out of ",len(kmodel.cluster_centers_)
+
+	pass
 
 # while cv2.waitKey(0) != 27:
 # 	pass
@@ -79,4 +119,6 @@ if __name__ == "__main__":
 		u_reg_models.append( copy.deepcopy(lrmodel) )
 		lrmodel.fit(nearest_points,v_regress)
 		v_reg_models.append( copy.deepcopy(lrmodel) )
+
+	AssignColor(T,kmodel,u_reg_models,v_reg_models,PatchSize)
 
