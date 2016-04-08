@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import cv2
+import os,copy
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LinearRegression
@@ -13,7 +14,8 @@ def PatchExtractor(image,psize,stride=None):
 
 	patches = []
 	# ytrain = np.zeros( (image.shape[0] - (1+psize),image.shape[1] - (1+psize)) )
-	ytrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
+	utrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
+	vtrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
 	if stride is None:
 		stride = psize
 
@@ -26,10 +28,13 @@ def PatchExtractor(image,psize,stride=None):
 			patch = image[nx*stride:(nx*stride)+psize,ny*stride:(ny*stride)+psize,dim]
 			# print patch.reshape((-1,1)).shape
 			patches.append( patch.reshape((1,-1)))
-			ytrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),dim]
+			utrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
+			vtrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
 
-	ytrain = ytrain.reshape((-1,1))
-	return np.vstack(patches),ytrain
+	# UV Values to train for regression
+	utrain = utrain.reshape((-1,1))
+	vtrain = vtrain.reshape((-1,1))
+	return np.vstack(patches),utrain,vtrain
 
 # while cv2.waitKey(0) != 27:
 # 	pass
@@ -43,15 +48,18 @@ if __name__ == "__main__":
 	T = cv2.cvtColor(cv2.imread("img_gray.jpg",0),cv2.COLOR_GRAY2BGR) 
 	T = cv2.cvtColor(T,cv2.COLOR_BGR2YUV)
 
-	patches,ytrain = PatchExtractor(S,PatchSize,PatchStride)
+	patches,u_vals,v_vals = PatchExtractor(S,PatchSize,PatchStride)
 	print "Patches shape:",patches.shape
 
 	lrmodel = LinearRegression(n_jobs=-1)
 	kmodel = KMeans(n_clusters=3,n_jobs=-1)
 	labels = kmodel.fit_predict(patches)
-	print "Model fit done! "
+	print "KMeans Model fit done!"
 
 	mean_patch = np.zeros((PatchSize,PatchSize))
+	u_reg_models = []
+	v_reg_models = []
+
 	for i,pt in enumerate(kmodel.cluster_centers_):
 		mean_patch = pt.reshape(PatchSize,PatchSize)
 		mean_patch = np.uint8(mean_patch)
@@ -60,12 +68,15 @@ if __name__ == "__main__":
 		# cv2.imshow("Mean patch",mean_patch)
 		# cv2.waitKey(0)
 		nearest_points = patches[labels == i,]
-		y_regress = ytrain[labels == i]
+		u_regress = u_vals[labels == i]
+		v_regress = v_vals[labels == i]
 
 		# To verify that average of the spliced points is actually the mean_patch, use this line:
 		# print "Average: ",np.average(nearest_points,axis=0),"\nvs mean:",pt
 
 		print "nearest_points:",nearest_points.shape
-		print "ytrain:",y_regress.shape
-		lrmodel.fit(nearest_points,y_regress)
+		lrmodel.fit(nearest_points,u_regress)
+		u_reg_models.append( copy.deepcopy(lrmodel) )
+		lrmodel.fit(nearest_points,v_regress)
+		v_reg_models.append( copy.deepcopy(lrmodel) )
 
