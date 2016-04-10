@@ -55,14 +55,14 @@ def PatchExtractor(image,psize,stride=None):
 
 #########################################################################
 # TrainKmeansAndRegression:
-#   Trains the K-means clutering model and uses
+#   Trains the K-means clustering model and uses
 #   the U-V values of the patch centers to train
 #   regression models for each cluster center
 #########################################################################
 
 def TrainKmeansAndRegression(patches,u_vals,v_vals):
     # Model declarations
-    lrmodel = LinearRegression(n_jobs=-1)
+    lrmodel = LinearRegression()#n_jobs=-1)
     kmodel = KMeans(n_clusters=NumClusters,n_jobs=-1)
 
     labels = kmodel.fit_predict(patches)
@@ -149,9 +149,14 @@ if __name__ == "__main__":
     T = cv2.imread("img_gray.jpg",0) # Target gray image
 
     #--- YUV Conversion
-    S = cv2.cvtColor(cv2.imread("img_color.jpg"),cv2.COLOR_BGR2YUV) 
-    T = cv2.cvtColor(cv2.imread("img_gray.jpg",0),cv2.COLOR_GRAY2BGR) 
+    B=cv2.imread("img_color.jpg")
+    S = cv2.cvtColor(B,cv2.COLOR_BGR2YUV)
+    A=cv2.imread("img_gray.jpg",0)
+    cv2.imshow('gray_grayimage',A) 
+    T = cv2.cvtColor(A,cv2.COLOR_GRAY2BGR) 
+    cv2.imshow('bgr_grayimage',T)
     T = cv2.cvtColor(T,cv2.COLOR_BGR2YUV)
+    # cv2.waitKey(0)
 
     patches_filename = "patches_psize-"+str(PatchSize)+",pstride-"+str(PatchStride)
     try:
