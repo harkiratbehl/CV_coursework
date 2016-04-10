@@ -7,7 +7,7 @@ from sklearn.cluster import KMeans
 from sklearn.linear_model import LinearRegression
 
 #--- Global declarations
-NumClusters = 20
+NumClusters = 3
 PatchSize = 15
 PatchStride = PatchSize
 
@@ -23,8 +23,10 @@ def PatchExtractor(image,psize,stride=None):
     assert(psize%2 == 1) #--- Patch size must be odd
 
     patches = []
-    utrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
-    vtrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
+    # utrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
+    # vtrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
+    utrain = []
+    vtrain = []
     if stride is None:
         stride = psize
 
@@ -38,13 +40,15 @@ def PatchExtractor(image,psize,stride=None):
             patches.append( patch.reshape((1,-1)))
             
             #--- Get UV values for current center pixel:
-            utrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
-            vtrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
+            utrain.append( image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1] )
+            vtrain.append( image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2] )
+            # utrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
+            # vtrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
 
     #--- UV Values to train for regression
-    utrain = utrain.reshape((-1,1))
-    vtrain = vtrain.reshape((-1,1))
-    return np.vstack(patches),utrain,vtrain
+    # utrain = utrain.reshape((-1,1))
+    # vtrain = vtrain.reshape((-1,1))
+    return np.vstack(patches),np.array(utrain),np.array(vtrain)
 
 #########################################################################
 # TrainKmeansAndRegression:
@@ -69,8 +73,9 @@ def TrainKmeansAndRegression(patches,u_vals,v_vals):
         u_regress = u_vals[labels == i]
         v_regress = v_vals[labels == i]
 
+        # print u_regress.shape, v_regress.shape,nearest_points.shape
         #--- To verify that average of the spliced points is actually the mean_patch, use this line:
-        #--- print "Average: ",np.average(nearest_points,axis=0),"\nvs mean:",pt
+        # print "Average: ",np.average(nearest_points,axis=0),"\nvs mean:",pt
         # print "nearest_points:",nearest_points.shape
 
         lrmodel.fit(nearest_points,u_regress)
