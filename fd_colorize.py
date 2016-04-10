@@ -10,7 +10,8 @@ from sklearn.linear_model import LinearRegression
 NumClusters = 3
 PatchSize = 15
 PatchStride = PatchSize
-
+CenterSize = 1
+CenterLen = (2*CenterSize + 1)*(2*CenterSize + 1)
 #########################################################################
 # Patch Extractor:
 #   Takes as input a single image and returns a 
@@ -40,15 +41,17 @@ def PatchExtractor(image,psize,stride=None):
             patches.append( patch.reshape((1,-1)))
             
             #--- Get UV values for current center pixel:
-            utrain.append( image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1] )
-            vtrain.append( image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2] )
+            ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,1]
+            ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,2]
+            utrain.append( ut.reshape((1,-1)) )
+            vtrain.append( ut.reshape((1,-1)) )
             # utrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
             # vtrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
 
     #--- UV Values to train for regression
     # utrain = utrain.reshape((-1,1))
     # vtrain = vtrain.reshape((-1,1))
-    return np.vstack(patches),np.array(utrain),np.array(vtrain)
+    return np.vstack(patches),np.vstack(utrain),np.vstack(vtrain)
 
 #########################################################################
 # TrainKmeansAndRegression:
@@ -70,18 +73,25 @@ def TrainKmeansAndRegression(patches,u_vals,v_vals):
 
     for i,pt in enumerate(kmodel.cluster_centers_):
         nearest_points = patches[labels == i,]
-        u_regress = u_vals[labels == i]
-        v_regress = v_vals[labels == i]
+        u_regress = u_vals[labels == i,]
+        v_regress = v_vals[labels == i,]
 
         # print u_regress.shape, v_regress.shape,nearest_points.shape
         #--- To verify that average of the spliced points is actually the mean_patch, use this line:
         # print "Average: ",np.average(nearest_points,axis=0),"\nvs mean:",pt
         # print "nearest_points:",nearest_points.shape
+        u_temp_model = []
+        v_temp_model = []
 
-        lrmodel.fit(nearest_points,u_regress)
-        u_reg_models.append( copy.deepcopy(lrmodel) )
-        lrmodel.fit(nearest_points,v_regress)
-        v_reg_models.append( copy.deepcopy(lrmodel) )
+        for k in range(0,CenterLen):
+            lrmodel.fit(nearest_points,u_regress[:,k])
+            u_temp_model.append( copy.deepcopy(lrmodel) )        
+            lrmodel.fit(nearest_points,v_regress[:,k])
+            v_temp_model.append( copy.deepcopy(lrmodel) )        
+
+
+        u_reg_models.append( u_temp_model )
+        v_reg_models.append( v_temp_model )
 
         string = "\rTraining regression models... %4.2f " % ( 100.0*i/len(kmodel.cluster_centers_) )
         sys.stdout.write(string)
@@ -151,6 +161,8 @@ if __name__ == "__main__":
         print "Pickle file not found:",patches_filename,"\n Generating patches..."
         patches,u_vals,v_vals = PatchExtractor(S,PatchSize,PatchStride)
         pickle.dump( (patches,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
+
+    print patches.shape, u_vals.shape, v_vals.shape
 
     train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
 
