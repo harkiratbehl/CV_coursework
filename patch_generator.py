@@ -31,6 +31,7 @@ class patch_generator:
             for nx in range( (1+image.shape[0]-psize)//stride ):
                 #--- Get patch for current center pixel:
                 patch = image[nx*stride:(nx*stride)+psize,ny*stride:(ny*stride)+psize,dim]
+                patch = patch - np.average(patch)
                 patches.append( patch.reshape((1,-1)))
                 
                 #--- Get UV values for current center pixel:
