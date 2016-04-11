@@ -11,10 +11,7 @@ class patch_generator:
     def __init__(self,imagefolder,psize,stride,CenterSize):
         self.patches,self.u_vals,self.v_vals = self.PatchExtractor(imagefolder,psize,stride,CenterSize)
 
-    def PatchExtractor(a,image,psize,stride=None):
-        # print image
-        # print psize
-        # print stride
+    def PatchExtractor(self,image,psize,stride=None,CenterSize=1):
         assert(psize%2 == 1) #--- Patch size must be odd
 
         patches = []
@@ -23,7 +20,6 @@ class patch_generator:
         utrain = []
         vtrain = []
         
-
         dim = 0 #--- Use only Y (Luminance)
         # print 'hell'
         #--- Iterates over all possible patch centers in the image which give a full patch
@@ -36,9 +32,9 @@ class patch_generator:
                 
                 #--- Get UV values for current center pixel:
                 ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,1]
-                ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,2]
+                vt = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,2]
                 utrain.append( ut.reshape((1,-1)) )
-                vtrain.append( ut.reshape((1,-1)) )
+                vtrain.append( vt.reshape((1,-1)) )
                 # utrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
                 # vtrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
 

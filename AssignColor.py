@@ -1,11 +1,12 @@
 from dependency import *
 
 class AssignColor:
-    def __init__(self,image,kmodel,u_reg_models,v_reg_models,psize):
-        self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,psize)
+    def __init__(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize):
+        self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,psize,CenterSize)
 
 
-    def assignColor(a,image,kmodel,u_reg_models,v_reg_models,psize): #Image should be YUV
+    def assignColor(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize): #Image should be YUV
+        CenterLen = (2*CenterSize + 1)*(2*CenterSize + 1)
         p_by2 = psize//2
         patches = []
         patch_centers = []
@@ -26,19 +27,25 @@ class AssignColor:
                     continue
                 # u_patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
                 # v_patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
-                u_val = u_reg_models[i].predict( patches[ind].reshape(1,-1) )
-                v_val = v_reg_models[i].predict( patches[ind].reshape(1,-1) )
+
+                u_vals = np.zeros(CenterLen)
+                v_vals = np.zeros(CenterLen)
+
+                for j in range(CenterLen):
+                    u_vals[j] = (1.0/CenterLen)*u_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) 
+                    v_vals[j] = (1.0/CenterLen)*v_reg_models[i][j].predict( patches[ind].reshape(1,-1) )
+
+                # u_val = u_reg_models[i].predict( patches[ind].reshape(1,-1) )
+                # v_val = v_reg_models[i].predict( patches[ind].reshape(1,-1) )
                 
                 px,py = patch_centers[ind][0], patch_centers[ind][1]
-                image[px,py,1] = u_val
-                image[px,py,2] = v_val
+                image[px-CenterSize:px+CenterSize+1,py-CenterSize:py+CenterSize+1,1] += u_vals.reshape((3,3))
+                image[px-CenterSize:px+CenterSize+1,py-CenterSize:py+CenterSize+1,2] += v_vals.reshape((3,3))
                 
                 #--- Progress reporting section
-                if ind%10000 == 0:
-                    string = "\rProgress: %5.2f " % ( 100.0*ind/len(patch_centers) )
-                    string += " Last u,v assigned: %3.2f %3.2f" % (u_val,v_val)
+                if ind%1000 == 0:
+                    string = "\rColor Assign Progress: %5.2f%% \t Phase:%d/%d" % ( 100.0*ind/len(patch_centers,i+1,len(kmodel.cluster_centers_)) )
                     sys.stdout.write(string)
                     sys.stdout.flush()
-            print "\nPhase completed: ", i+1," out of ",len(kmodel.cluster_centers_)
         
         return np.uint8(image)
