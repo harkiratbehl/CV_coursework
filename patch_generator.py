@@ -20,8 +20,8 @@ class patch_generator:
         patches = []
         if stride is None:
             stride = psize
-        utrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
-        vtrain = np.zeros(( (1+image.shape[0]-psize)//stride, (1+image.shape[1]-psize)//stride ))
+        utrain = []
+        vtrain = []
         
 
         dim = 0 #--- Use only Y (Luminance)
