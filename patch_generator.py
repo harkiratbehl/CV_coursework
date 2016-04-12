@@ -35,10 +35,14 @@ class patch_generator:
                 #--- Get UV values for current center pixel:
                 ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,1]
                 vt = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,2]
+                ut = ut - np.average(patch)
+                vt = vt - np.average(patch)
                 utrain.append( ut.reshape((1,-1)) )
                 vtrain.append( vt.reshape((1,-1)) )
-                # utrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
-                # vtrain[nx,ny] = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
+
+
+        ############################
+        #will have to pass the patch mean with each patch
 
         #--- UV Values to train for regression
         # utrain = utrain.reshape((-1,1))

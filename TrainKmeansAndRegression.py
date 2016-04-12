@@ -16,6 +16,9 @@ class TrainKmeansAndRegression:
         lrmodel = LinearRegression(n_jobs=-1)
         kmodel = KMeans(n_clusters=NumClusters,n_jobs=-1)
 
+
+        ####INCORRECT
+        #We should only make clusters with the patches and not centre pixels
         labels = kmodel.fit_predict(patches)
         print "KMeans clustering completed."
 
