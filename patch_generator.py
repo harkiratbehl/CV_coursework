@@ -9,12 +9,13 @@ from dependency import *
 
 class patch_generator:
     def __init__(self,imagefolder,psize,stride,CenterSize):
-        self.patches,self.u_vals,self.v_vals = self.PatchExtractor(imagefolder,psize,stride,CenterSize)
+        self.patches,self.patch_means,self.u_vals,self.v_vals = self.PatchExtractor(imagefolder,psize,stride,CenterSize)
 
     def PatchExtractor(self,image,psize,stride=None,CenterSize=1):
         assert(psize%2 == 1) #--- Patch size must be odd
 
         patches = []
+        patch_means = []
         if stride is None:
             stride = psize
         utrain = []
@@ -27,6 +28,7 @@ class patch_generator:
             for nx in range( (1+image.shape[0]-psize)//stride ):
                 #--- Get patch for current center pixel:
                 patch = image[nx*stride:(nx*stride)+psize,ny*stride:(ny*stride)+psize,dim]
+                patch_means.append(np.average(patch))
                 patch = patch - np.average(patch)
                 patches.append( patch.reshape((1,-1)))
                 
@@ -41,4 +43,4 @@ class patch_generator:
         #--- UV Values to train for regression
         # utrain = utrain.reshape((-1,1))
         # vtrain = vtrain.reshape((-1,1))
-        return np.vstack(patches),np.vstack(utrain),np.vstack(vtrain)
+        return np.vstack(patches),patch_means,np.vstack(utrain),np.vstack(vtrain)

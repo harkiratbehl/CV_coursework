@@ -1,11 +1,11 @@
 from dependency import *
 
 class AssignColor:
-    def __init__(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize):
-        self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,psize,CenterSize)
+    def __init__(self,image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize):
+        self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize)
 
 
-    def assignColor(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize): #Image should be YUV
+    def assignColor(self,image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize): #Image should be YUV
         CenterLen = (2*CenterSize + 1)*(2*CenterSize + 1)
         p_by2 = psize//2
         patches = []
@@ -32,8 +32,8 @@ class AssignColor:
                 v_vals = np.zeros(CenterLen)
 
                 for j in range(CenterLen):
-                    u_vals[j] = (1.0/CenterLen)*u_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) 
-                    v_vals[j] = (1.0/CenterLen)*v_reg_models[i][j].predict( patches[ind].reshape(1,-1) )
+                    u_vals[j] = (1.0/CenterLen)*( u_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) +  
+                    v_vals[j] = (1.0/CenterLen)*( v_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) + 
 
                 # u_val = u_reg_models[i].predict( patches[ind].reshape(1,-1) )
                 # v_val = v_reg_models[i].predict( patches[ind].reshape(1,-1) )

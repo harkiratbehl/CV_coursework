@@ -22,28 +22,29 @@ if __name__ == "__main__":
     # cv2.waitKey(0)
 
     patches_filename = "patches_psize-"+str(PatchSize)+",pstride-"+str(PatchStride)
-    try:
-        (patches,u_vals,v_vals) = pickle.load( open( patches_filename+".p", "rb" ) )
-        print "Successfully loaded pickle file:",patches_filename
-    except IOError:
-        print "Pickle file not found:",patches_filename,"\n Generating patches..."
-        a = patch_generator(S,PatchSize,PatchStride,CenterDist)
-        patches,u_vals,v_vals = a.patches,a.u_vals,a.v_vals
-        pickle.dump( (patches,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
-
-    train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
 
     try:
         (kmodel,u_reg_models,v_reg_models) = pickle.load( open( train_filename+".p", "rb" ) )
         print "Successfully loaded pickle file:",train_filename
     except IOError:
+        try:
+            (patches,patch_means,u_vals,v_vals) = pickle.load( open( patches_filename+".p", "rb" ) )
+            print "Successfully loaded pickle file:",patches_filename
+        except IOError:
+            print "Pickle file not found:",patches_filename,"\n Generating patches..."
+            a = patch_generator(S,PatchSize,PatchStride,CenterDist)
+            patches,patch_means,u_vals,v_vals = a.patches,a.u_vals,a.v_vals
+            pickle.dump( (patches,patch_means,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
+
+        train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
+        
         print "Pickle file not found:",train_filename,"\n Training models..."
         b = TrainKmeansAndRegression(patches,u_vals,v_vals,NumClusters,CenterDist)
         kmodel,u_reg_models,v_reg_models = b.kmodel,b.u_reg_models,b.v_reg_models
         pickle.dump( (kmodel,u_reg_models,v_reg_models), open( train_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
 
     #--- Colorization step
-    c = AssignColor(T,kmodel,u_reg_models,v_reg_models,PatchSize,CenterDist)
+    c = AssignColor(T,kmodel,u_reg_models,v_reg_models,patch_means,PatchSize,CenterDist)
     output_yuv = c.output_yuv
     output_image = cv2.cvtColor(output_yuv,cv2.COLOR_YUV2BGR)
     cv2.imwrite("ColorizedOutput.jpg",output_image)
