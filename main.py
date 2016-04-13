@@ -33,7 +33,7 @@ if __name__ == "__main__":
         except IOError:
             print "Pickle file not found:",patches_filename,"\n Generating patches..."
             a = patch_generator(S,PatchSize,PatchStride,CenterDist)
-            patches,patch_means,u_vals,v_vals = a.patches,a.u_vals,a.v_vals
+            patches,patch_means,u_vals,v_vals = a.patches,a.patch_means,a.u_vals,a.v_vals
             pickle.dump( (patches,patch_means,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
 
         train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
