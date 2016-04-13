@@ -31,23 +31,25 @@ class patch_generator:
                 for nx in range( (1+image.shape[0]-psize)//stride ):
                     #--- Get patch for current center pixel:
                     patch = image[nx*stride:(nx*stride)+psize,ny*stride:(ny*stride)+psize,dim]
-                    patch_means.append(np.average(patch))
-                    patch = patch - np.average(patch)
+                    mean = np.average(patch)
+                    patch_means.append(mean)
+                    patch = patch - mean
                     patches.append( patch.reshape((1,-1)))
                     
                     #--- Get UV values for current center pixel:
                     ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,1]
                     vt = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,2]
-                    ut = ut - np.average(patch)
-                    vt = vt - np.average(patch)
+                    ut = ut - mean
+                    vt = vt - mean
                     utrain.append( ut.reshape((1,-1)) )
                     vtrain.append( vt.reshape((1,-1)) )
 
 
         ############################
         #will have to pass the patch mean with each patch
+        #NO NEED
 
         #--- UV Values to train for regression
         # utrain = utrain.reshape((-1,1))
         # vtrain = vtrain.reshape((-1,1))
-        return np.vstack(patches),patch_means,np.vstack(utrain),np.vstack(vtrain)
+        return np.vstack(patches),np.vstack(utrain),np.vstack(vtrain)
