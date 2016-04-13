@@ -8,13 +8,11 @@ CenterDist = 1
 PatchStride = PatchSize
 
 if __name__ == "__main__":
-    S = cv2.imread("img_color.jpg") # Source color image
+    # S = cv2.imread("img_color.jpg") # Source color image
     T = cv2.imread("img_gray.jpg",0) # Target gray image
 
+    imagefolder = 'images'
     #--- YUV Conversion
-    B=cv2.imread("img_color.jpg")
-    S = cv2.cvtColor(B,cv2.COLOR_BGR2YUV)
-    A=cv2.imread("img_gray.jpg",0)
     # cv2.imshow('gray_grayimage',A)
     T = cv2.cvtColor(A,cv2.COLOR_GRAY2BGR) 
     # cv2.imshow('bgr_grayimage',T)
@@ -32,7 +30,7 @@ if __name__ == "__main__":
             print "Successfully loaded pickle file:",patches_filename
         except IOError:
             print "Pickle file not found:",patches_filename,"\n Generating patches..."
-            a = patch_generator(S,PatchSize,PatchStride,CenterDist)
+            a = patch_generator(imagefolder,PatchSize,PatchStride,CenterDist)
             patches,patch_means,u_vals,v_vals = a.patches,a.patch_means,a.u_vals,a.v_vals
             pickle.dump( (patches,patch_means,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
 
