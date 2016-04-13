@@ -9,7 +9,7 @@ from dependency import *
 
 class patch_generator:
     def __init__(self,imagefolder,psize,stride,CenterSize):
-        self.patches,self.patch_means,self.u_vals,self.v_vals = self.PatchExtractor(imagefolder,psize,stride,CenterSize)
+        self.patches,self.u_vals,self.v_vals = self.PatchExtractor(imagefolder,psize,stride,CenterSize)
 
     def PatchExtractor(self,imagefolder,psize,stride=None,CenterSize=1):
         assert(psize%2 == 1) #--- Patch size must be odd

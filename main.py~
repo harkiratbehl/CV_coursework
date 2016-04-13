@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # cv2.waitKey(0)
 
     patches_filename = "patches_psize-"+str(PatchSize)+",pstride-"+str(PatchStride)
-    train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
+
     try:
         (kmodel,u_reg_models,v_reg_models) = pickle.load( open( train_filename+".p", "rb" ) )
         print "Successfully loaded pickle file:",train_filename
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             patches,u_vals,v_vals = a.patches,a.u_vals,a.v_vals
             pickle.dump( (patches,u_vals,v_vals), open( patches_filename+".p", "wb" ),protocol=pickle.HIGHEST_PROTOCOL )
 
-        
+        train_filename = "KnRmodel_n-clusters-"+str(NumClusters)+"_"+patches_filename
         
         print "Pickle file not found:",train_filename,"\n Training models..."
         b = TrainKmeansAndRegression(patches,u_vals,v_vals,NumClusters,CenterDist)

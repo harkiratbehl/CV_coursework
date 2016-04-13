@@ -2,7 +2,7 @@ from dependency import *
 
 class AssignColor:
     def __init__(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize):
-        self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,psize,CenterSize)
+        self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize)
 
 
     def assignColor(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize): #Image should be YUV
@@ -47,7 +47,7 @@ class AssignColor:
                 
                 #--- Progress reporting section
                 if ind%1000 == 0:
-                    string = "\rColor Assign Progress: %5.2f%% \t Phase:%d/%d" % ( 100.0*ind/len(patch_centers),i+1,len(kmodel.cluster_centers_))
+                    string = "\rColor Assign Progress: %5.2f%% \t Phase:%d/%d" % ( 100.0*ind/len(patch_centers,i+1,len(kmodel.cluster_centers_)) )
                     sys.stdout.write(string)
                     sys.stdout.flush()
         
