@@ -37,12 +37,12 @@ class patch_generator:
                     patches.append( patch.reshape((1,-1)))
                     
                     #--- Get UV values for current center pixel:
-                    ut = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,1]
-                    vt = image[(nx*stride)+(psize//2) - CenterSize:(nx*stride)+(psize//2) + 1 + CenterSize,(ny*stride)+(psize//2) - CenterSize:(ny*stride)+(psize//2) + 1 + CenterSize,2]
+                    ut = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),1]
+                    vt = image[(nx*stride)+(psize//2),(ny*stride)+(psize//2),2]
                     #ut = ut - mean
                     #vt = vt - mean
-                    utrain.append( ut.reshape((1,-1)) )
-                    vtrain.append( vt.reshape((1,-1)) )
+                    utrain.append( ut )
+                    vtrain.append( vt )
 
 
         ############################

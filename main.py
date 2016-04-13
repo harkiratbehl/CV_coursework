@@ -2,7 +2,7 @@
 
 from dependency import *
 #--- Global declarations
-NumClusters = 50
+NumClusters = 100
 PatchSize = 15
 CenterDist = 0
 PatchStride = PatchSize
