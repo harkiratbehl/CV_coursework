@@ -1,30 +1,33 @@
 from dependency import *
 
 class AssignColor:
-    def __init__(self,image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize):
+    def __init__(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize):
         self.output_yuv = self.assignColor(image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize)
 
 
-    def assignColor(self,image,kmodel,u_reg_models,v_reg_models,patch_means,psize,CenterSize): #Image should be YUV
+    def assignColor(self,image,kmodel,u_reg_models,v_reg_models,psize,CenterSize): #Image should be YUV
         CenterLen = (2*CenterSize + 1)*(2*CenterSize + 1)
         p_by2 = psize//2
         patches = []
         patch_centers = []
+        patch_means =[]
         for px in range( p_by2, image.shape[0]-p_by2 ):
             for py in range( p_by2, image.shape[1]-p_by2 ):
                 patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
+                patch_means.append(np.average(patch))
+                patch = patch - np.average(patch)
                 patches.append( patch.reshape((1,-1)) )
                 patch_centers.append( [px,py] )
 
         patches = np.vstack(patches)
         mean_labels = kmodel.predict( patches )
 
-        for i,pt in enumerate(kmodel.cluster_centers_):
+        for i,pt in enumerate(kmodel.cluster_centers_): #iterate over all cluster centre
             #--- The indices for the patches which belong to current cluster
-            indices = [mean_labels == i]
-            for ind in range(len(patch_centers)):
+            indices = [mean_labels == i]    #all patches which belong to cluster centre i
+            for ind in range(len(patch_centers)):#iterate over all patches(in a way all patches of this cluster centre)
                 if indices[0][ind] is False:
-                    continue
+                    continue                    #if a given patch is not in this cluster centre
                 # u_patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
                 # v_patch = image[ px-p_by2:1+px+p_by2, py-p_by2:1+py+p_by2, 0]
 
@@ -32,8 +35,8 @@ class AssignColor:
                 v_vals = np.zeros(CenterLen)
 
                 for j in range(CenterLen):
-                    u_vals[j] = (1.0/CenterLen)*( u_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) +  
-                    v_vals[j] = (1.0/CenterLen)*( v_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) + 
+                    u_vals[j] = (1.0/CenterLen)*( u_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) + patch_means[ind]#stores u values for all pixels predicted by this patch
+                    v_vals[j] = (1.0/CenterLen)*( v_reg_models[i][j].predict( patches[ind].reshape(1,-1) ) + patch_means[ind]
 
                 # u_val = u_reg_models[i].predict( patches[ind].reshape(1,-1) )
                 # v_val = v_reg_models[i].predict( patches[ind].reshape(1,-1) )
