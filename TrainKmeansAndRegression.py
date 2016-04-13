@@ -30,7 +30,7 @@ class TrainKmeansAndRegression:
             u_regress = u_vals[labels == i,]
             v_regress = v_vals[labels == i,]
 
-            # print u_regress.shape, v_regress.shape,nearest_points.shape
+            #print u_regress, v_regress,nearest_points.shape
             #--- To verify that average of the spliced points is actually the mean_patch, use this line:
             # print "Average: ",np.average(nearest_points,axis=0),"\nvs mean:",pt
             # print "nearest_points:",nearest_points.shape
@@ -43,10 +43,11 @@ class TrainKmeansAndRegression:
                 lrmodel.fit(nearest_points,v_regress[:,k])
                 v_temp_model.append( copy.deepcopy(lrmodel) )
 
-            u_reg_models.append( u_temp_model )
-            v_reg_models.append( v_temp_model )
+            u_reg_models.append( copy.deepcopy(u_temp_model) )
+            v_reg_models.append( copy.deepcopy(v_temp_model) )
 
             string = "\rTraining regression models... %4.2f " % ( 100.0*i/len(kmodel.cluster_centers_) )
             sys.stdout.write(string)
             sys.stdout.flush()
+        print len(u_reg_models), len(v_reg_models)
         return kmodel,u_reg_models,v_reg_models

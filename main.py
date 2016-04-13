@@ -2,9 +2,9 @@
 
 from dependency import *
 #--- Global declarations
-NumClusters = 3
+NumClusters = 50
 PatchSize = 15
-CenterDist = 1
+CenterDist = 0
 PatchStride = PatchSize
 
 if __name__ == "__main__":
